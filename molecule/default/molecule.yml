@@ -15,7 +15,7 @@ driver:
   esxi_hostname: ${ESXI_HOSTNAME}
   folder: /Ansible/molecule
   vm_username: root
-  vm_password: password
+  vm_password: Renegade187!
   instance_os_type: linux 
 platforms:
   - name: david-gateway
