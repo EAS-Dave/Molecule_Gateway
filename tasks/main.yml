@@ -1,0 +1,90 @@
+---
+# tasks file for RaspiCam
+- name: refresh subscription manager
+  command: subscription-manager refresh
+
+- name: Update /etc/sysconfig/network
+  lineinfile:
+    path: /etc/sysconfig/network
+    search_string: "{{ item.search_string }}"
+    line: "{{ item.line }}"
+  loop:
+    - { search_string: 'GATEWAY', line: "GATEWAY={{ hostvars[groups['gateway'][0]].ansible_host }}"}
+    - { search_string: 'NETWORK', line: 'NETWORK=nat'}
+
+- name: Install the latest version of Iptables
+  ansible.builtin.yum:
+    name: iptables-services
+    state: latest
+
+- name: Update /etc/sysconfig/network-scripts/ifcfg-ens160
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-ens224
+    search_string: GATEWAY
+    line: "GATEWAY={{ hostvars[groups['gateway'][0]].ansible_host }}"
+
+# - name: Flush and Delete nat and mangle tables
+#   ansible.builtin.iptables:
+#     table: "{{item.table}}"
+#     chain: PREROUTING
+#     flush: yes
+#     state: absent
+#   loop:
+#     - { table: 'nat'}
+#     - { table: 'mangle'}
+- name: Flush tables
+  command: "iptables -F"
+
+- name: Flush nat and mangle tables
+  command: "iptables -t {{ item }} -F"
+  loop:
+    - "nat"
+    - "mangle"
+  
+- name: Delete tables
+  command: "iptables -X"
+
+- name: Delete nat and mangle tables
+  command: "iptables -t {{ item }} -X"
+  loop:
+    - "nat"
+    - "mangle"
+
+- name: IP Forwarding / Masquerading
+  ansible.builtin.iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: ens192
+    jump: MASQUERADE
+
+- name: IP Forwarding
+  ansible.builtin.iptables:
+    chain: FORWARD
+    in_interface: ens224
+    jump: ACCEPT
+
+- name: Set ip forwarding on in /proc and verify token value with the sysctl command
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+
+- name: Save current state of iptables in system file
+  community.general.iptables_state:
+    state: saved
+    path: /etc/sysconfig/iptables
+
+- name: Reload IPtables service
+  ansible.builtin.service:
+    name: iptables
+    state: reloaded
+
+- name: Restart IPtables service
+  ansible.builtin.service:
+    name: iptables
+    state: restarted
+
+- name: Restart network
+  service:
+    name: NetworkManager
+    state: restarted
