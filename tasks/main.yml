@@ -1,6 +1,8 @@
 ---
 # tasks file for RaspiCam
-
+- name: Playbook to create a Gateway
+  hosts: gateway
+  
 - name: Set Status variable
   set_fact:
     gateway_status: PROCESSING

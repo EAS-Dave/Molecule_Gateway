@@ -1,6 +1,6 @@
 ---
 - name: Converge
-  hosts: all
+  hosts: gateway
   tasks:
     - name: "Include dave.gateway"
       include_role:
