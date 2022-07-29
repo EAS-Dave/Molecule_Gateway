@@ -1,5 +1,10 @@
 ---
 # tasks file for RaspiCam
+
+- name: Set Status variable
+  set_fact:
+    gateway_status: PROCESSING
+
 - name: refresh subscription manager
   command: subscription-manager refresh
 
@@ -88,3 +93,7 @@
   service:
     name: NetworkManager
     state: restarted
+
+- name: Set Status variable
+  set_fact:
+    gateway_status: COMPLETE
