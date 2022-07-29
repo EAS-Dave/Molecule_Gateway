@@ -4,7 +4,6 @@ dependency:
   options:
     ignore-certs: True
     ignore-errors: True
-    role-file: requirements.yml
 driver:
   name: vmware
   vcenter_hostname: ${VCENTER_HOSTNAME}
